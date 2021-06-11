@@ -8,11 +8,13 @@ class ResultScreen extends StatelessWidget {
   const ResultScreen({
     Key? key,
     required this.score,
-    required this.totalQuestions,
+    required this.questions,
+    required this.totalTime,
   }) : super(key: key);
 
   final int score;
-  final int totalQuestions;
+  final List<Question> questions;
+  final int totalTime;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class ResultScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Result: $score / $totalQuestions',
+                'Result: $score / ${questions.length}',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 40,
@@ -36,8 +38,8 @@ class ResultScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => QuizScreen(
-                        totalTime: 10,
-                        questions: question,
+                        totalTime: totalTime,
+                        questions: questions,
                       ),
                     ),
                   );
