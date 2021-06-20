@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hajir_jawaf/components/action_button.dart';
 import 'package:hajir_jawaf/components/gradient_box.dart';
+import 'package:hajir_jawaf/components/rank_auth_button.dart';
 import 'package:hajir_jawaf/models/question.dart';
 import 'package:hajir_jawaf/screens/quiz_screen.dart';
 
@@ -42,48 +43,51 @@ class HomeScreen extends StatelessWidget {
                       .toList();
 
                   return StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('config')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        print(snapshot.error);
-                        if (!snapshot.hasData) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        final configDoc = snapshot.data!.docs.first.data()
-                            as Map<String, dynamic>;
-                        final totalTime = configDoc['key'];
-
-                        return Column(
-                          children: [
-                            ActionButton(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => QuizScreen(
-                                      totalTime: totalTime,
-                                      questions: questions,
-                                    ),
-                                  ),
-                                );
-                              },
-                              title: 'Start',
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              'Total Questions: ${questions.length}',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            )
-                          ],
+                    stream: FirebaseFirestore.instance
+                        .collection('config')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      print(snapshot.error);
+                      if (!snapshot.hasData) {
+                        return Center(
+                          child: CircularProgressIndicator(),
                         );
-                      });
+                      }
+
+                      final configDoc = snapshot.data!.docs.first.data()
+                          as Map<String, dynamic>;
+                      final totalTime = configDoc['key'];
+
+                      return Column(
+                        children: [
+                          ActionButton(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => QuizScreen(
+                                    totalTime: totalTime,
+                                    questions: questions,
+                                  ),
+                                ),
+                              );
+                            },
+                            title: 'Start',
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            'Total Questions: ${questions.length}',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          )
+                        ],
+                      );
+                    },
+                  );
                 },
               ),
+              SizedBox(height: 70),
+              RankAuthButton()
             ],
           ),
         ),

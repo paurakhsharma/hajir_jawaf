@@ -1,10 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hajir_jawaf/components/action_button.dart';
 import 'package:hajir_jawaf/components/gradient_box.dart';
+import 'package:hajir_jawaf/components/rank_auth_button.dart';
 import 'package:hajir_jawaf/models/question.dart';
 import 'package:hajir_jawaf/screens/quiz_screen.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   const ResultScreen({
     Key? key,
     required this.score,
@@ -17,6 +20,11 @@ class ResultScreen extends StatelessWidget {
   final int totalTime;
 
   @override
+  _ResultScreenState createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox.expand(
@@ -25,7 +33,7 @@ class ResultScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Result: $score / ${questions.length}',
+                'Result: ${widget.score} / ${widget.questions.length}',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 40,
@@ -38,17 +46,58 @@ class ResultScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => QuizScreen(
-                        totalTime: totalTime,
-                        questions: questions,
+                        totalTime: widget.totalTime,
+                        questions: widget.questions,
                       ),
                     ),
                   );
                 },
-              )
+              ),
+              SizedBox(height: 40),
+              RankAuthButton()
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _updateHighscore();
+  }
+
+  Future<void> _updateHighscore() async {
+    final authUser = FirebaseAuth.instance.currentUser;
+
+    if (authUser == null) return;
+
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(authUser.uid);
+
+    final userDoc = await userRef.get();
+
+    if (userDoc.exists) {
+      final user = userDoc.data();
+
+      if (user == null) return;
+
+      final lastHighscore = user['score'];
+
+      if (lastHighscore >= widget.score) {
+        return;
+      }
+
+      userRef.update({'score': widget.score});
+      return;
+    }
+
+    userRef.set({
+      'email': authUser.email,
+      'photoUrl': authUser.photoURL,
+      'score': widget.score,
+      'name': authUser.displayName,
+    });
   }
 }
