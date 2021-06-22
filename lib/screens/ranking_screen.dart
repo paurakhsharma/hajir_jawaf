@@ -1,12 +1,20 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hajir_jawaf/components/gradient_box.dart';
+import 'package:hajir_jawaf/providers/quiz_provider.dart';
 
-class RankingScreen extends StatelessWidget {
+import 'package:provider/provider.dart';
+
+class RankingScreen extends StatefulWidget {
   const RankingScreen({Key? key}) : super(key: key);
 
   @override
+  _RankingScreenState createState() => _RankingScreenState();
+}
+
+class _RankingScreenState extends State<RankingScreen> {
+  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<QuizProvider>();
     return Scaffold(
       body: GradientBox(
         child: Padding(
@@ -22,51 +30,49 @@ class RankingScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 40),
-              Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .orderBy('score', descending: true)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData)
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-
-                    final users = snapshot.data!.docs;
-
-                    return ListView.builder(
-                      itemBuilder: (context, index) {
-                        return Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                users[index]['photoUrl'],
-                              ),
-                            ),
-                            title: Text(
-                              users[index]['name'],
-                            ),
-                            trailing: Text(
-                              users[index]['score'].toString(),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+              if (provider.users.isEmpty)
+                Center(
+                  child: CircularProgressIndicator(),
+                )
+              else
+                Expanded(
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      final user = provider.users[index];
+                      return Card(
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                              user.photoUrl,
                             ),
                           ),
-                        );
-                      },
-                      itemCount: users.length,
-                    );
-                  },
-                ),
-              )
+                          title: Text(
+                            user.name,
+                          ),
+                          trailing: Text(
+                            user.score.toString(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    itemCount: provider.users.length,
+                  ),
+                )
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final provider = context.read<QuizProvider>();
+    provider.getAllUsers();
   }
 }
