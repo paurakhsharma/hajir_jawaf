@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:hajir_jawaf/components/gradient_box.dart';
@@ -25,11 +26,20 @@ class _QuizScreenState extends State<QuizScreen> {
   int _currentIndex = 0;
   String _selectedAnswer = '';
   int _score = 0;
+  List<Question> _shuffeledQuestions = [];
 
   @override
   void initState() {
     super.initState();
     _currentTime = widget.totalTime;
+
+    _shuffeledQuestions = _shuffle(widget.questions) as List<Question>;
+
+    _shuffeledQuestions = _shuffeledQuestions.map((e) {
+      return e.copyWith(
+        answers: _shuffle(e.answers) as List<String>,
+      );
+    }).toList();
 
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       print(_currentTime);
@@ -44,6 +54,22 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
+    List _shuffle(List items) {
+    var random = new Random();
+
+    // Go through all elements.
+    for (var i = items.length - 1; i > 0; i--) {
+      // Pick a pseudorandom number according to the list length
+      var n = random.nextInt(i + 1);
+
+      var temp = items[i];
+      items[i] = items[n];
+      items[n] = temp;
+    }
+
+    return items;
+  }
+
   @override
   void dispose() {
     _timer.cancel();
@@ -52,7 +78,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentQuestion = widget.questions[_currentIndex];
+    final currentQuestion = _shuffeledQuestions[_currentIndex];
     return Scaffold(
       body: GradientBox(
         child: Padding(
@@ -120,7 +146,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         }
 
                         Future.delayed(Duration(milliseconds: 200), () {
-                          if (_currentIndex == widget.questions.length - 1) {
+                          if (_currentIndex == _shuffeledQuestions.length - 1) {
                             pushResultScreen(context);
                             return;
                           }
@@ -146,7 +172,7 @@ class _QuizScreenState extends State<QuizScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => ResultScreen(
-          questions: widget.questions,
+          questions: _shuffeledQuestions,
           totalTime: widget.totalTime,
           score: _score,
         ),

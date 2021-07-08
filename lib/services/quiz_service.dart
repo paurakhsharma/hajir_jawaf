@@ -22,7 +22,9 @@ class QuizService {
   }
 
   static Future<List<QuizUser>> getAllUsers() async {
-    final usersRef = FirebaseFirestore.instance.collection('users').orderBy('score', descending: true);
+    final usersRef = FirebaseFirestore.instance
+        .collection('users')
+        .orderBy('score', descending: true);
     final userDoc = await usersRef.get();
 
     return userDoc.docs
@@ -45,17 +47,25 @@ class QuizService {
 
       if (user == null) return;
 
-      final lastHighscore = user['score'];
-
-      if (lastHighscore >= currentScore) {
-        return;
-      }
-
       userRef.update({'score': currentScore});
       return;
     }
 
-    userRef.set({
+    final users = await getAllUsers();
+
+
+    // reset user table if there there are 15 users
+    // already in the table
+    if (users.length == 15) {
+      for (var user in users) {
+        final userRef =
+            FirebaseFirestore.instance.collection('users').doc(user.id);
+
+        await userRef.delete();
+      }
+    }
+
+    await userRef.set({
       'email': authUser.email,
       'photoUrl': authUser.photoURL,
       'score': currentScore,
